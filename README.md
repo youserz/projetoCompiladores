@@ -40,5 +40,5 @@ gcc lex.yy.c parser.tab.c -o compilador
 ```
 
 ## 👥 Autores
-Bernado Diniz, Luan Shimosaka Luiz Philip
+Bernado Diniz, Luan Shimosaka, Luiz Philip
 
