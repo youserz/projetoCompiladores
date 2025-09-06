@@ -1,0 +1,16 @@
+// Linguagem BLL - Bernado, Luan, Luiz kakakak
+
+
+int main(){
+    int valor := 10;
+    int valor2 := valor + 10;
+    float valor3 := 10.2 + 10.3E20;
+
+    bool isFalse := true;
+
+    print("Hello, world!"); // ignora isso aqui
+
+    if(isFalse){
+        print("É falso viu");
+    }
+}
