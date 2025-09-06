@@ -10,6 +10,7 @@ int column_number = 1;
 letter          [A-Za-z]
 digit           [0-9]   
 number          {digit}+(\.{digit}+)?(E[+-]?{digit}+)?
+string          \"([^"]|\\.)*\"
 id              {letter}({letter}|{digit})*
 delim           [ \t]
 ws              {delim}+
@@ -31,6 +32,7 @@ true            { fprintf(yyout, "<TRUE> "); column_number+=yyleng; }
 false           { fprintf(yyout, "<FALSE> "); column_number+=yyleng; }
 {number}        { fprintf(yyout, "<NUMBER, %s> ", yytext); column_number+=yyleng; }
 {id}            { fprintf(yyout, "<ID, %s> ", yytext); column_number+=yyleng; }
+{string}        { fprintf(yyout, "<STRING, %s> ", yytext); column_number+=yyleng; }
 {Scomment}      {}
 {Mcomment}      {}
 \n              { fprintf(yyout, "\n"); column_number=1; }
@@ -51,7 +53,8 @@ false           { fprintf(yyout, "<FALSE> "); column_number+=yyleng; }
 ","             { fprintf(yyout, "<COMMA> "); column_number+=yyleng; }
 "("             { fprintf(yyout, "<LPARENTESE> "); column_number+=yyleng; }
 ")"             { fprintf(yyout, "<RPARENTESE> "); column_number+=yyleng; }
-
+"{"             { fprintf(yyout, "<LCHAVES> "); column_number+=yyleng; }
+"}"             { fprintf(yyout, "<RCHAVES> "); column_number+=yyleng; }
 
 
 {other}         { fprintf(yyout,"Lexicalerror on line %d and column %d. Input->\"%s\"\n", yylineno,column_number,yytext); column_number+=yyleng; }
