@@ -1,16 +1,19 @@
 // Linguagem BLL - Bernado, Luan, Luiz kakakak
 
-
-int main(){
-    int valor := 10;
-    int valor2 := valor + 10;
-    float valor3 := 10.2 + 10.3E20;
-
-    bool isFalse := true;
-
-    print("Hello, world!"); // ignora isso aqui
-
-    if(isFalse){
-        print("É falso viu");
-    }
+int main () {
+int a ;
+int b = -100;
+bool flag = true ;
+// Teste de operadores e expressoes
+a = b * 2;
+if ( a < 0 && flag != false ) {
+print ( a ) ;
 }
+/* Teste de laco e erro lexico */
+int count = 5;
+while ( count > 0) {
+count = count - 1;
+}
+// O caractere ’$ ’ deve gerar um erro .
+int erro = 5 $ ;
+}   
