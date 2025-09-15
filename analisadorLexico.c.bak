@@ -53,13 +53,12 @@ void display_symbol_table() {
 /*-------------------------- Definições de Expressões Regulares --------------------------*/
 letter          [A-Za-z]
 digit           [0-9]   
-number          {digit}+(\.{digit}+)?(E[+-]?{digit}+)?
+number          [-]?{digit}+
 id              {letter}({letter}|{digit})*
 delim           [ \t\r]
 ws              {delim}+
 Scomment        \/\/[^\n]*
 Mcomment        \/\*([^*]|\*+[^*/])*\*+\/
-string   \"([^"\n]|\\.)*\"
 
 other           .
 
@@ -67,7 +66,6 @@ other           .
 /*-------------------------- Regras Léxicas --------------------------*/
 %%
 "int"             { fprintf(yyout, "<INT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"float"           { fprintf(yyout, "<FLOAT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "bool"            { fprintf(yyout, "<BOOL, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "if"              { fprintf(yyout, "<IF, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "else"            { fprintf(yyout, "<ELSE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
@@ -83,10 +81,6 @@ other           .
                     insert_symbol(yytext, yylineno, column_number);
                     column_number += yyleng;
                 }
-{string} {
-    fprintf(yyout, "<STRING, %s, %d, %d> ", yytext, yylineno, column_number);
-    column_number += yyleng;
-}
 
 {Scomment}      {}
 {Mcomment}      {}
@@ -100,13 +94,14 @@ other           .
 
 "="             { fprintf(yyout, "<ASSIGN, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "=="            { fprintf(yyout, "<EQ, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"<>"            { fprintf(yyout, "<NE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+"!="            { fprintf(yyout, "<NE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "<"             { fprintf(yyout, "<LT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "<="            { fprintf(yyout, "<LE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 ">"             { fprintf(yyout, "<GT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 ">="            { fprintf(yyout, "<GE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "&&"            { fprintf(yyout, "<AND, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "||"            { fprintf(yyout, "<OR, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+"!"             { fprintf(yyout, "<NOT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 
 ";"             { fprintf(yyout, "<SEMICOLON, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 ","             { fprintf(yyout, "<COMMA, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
