@@ -12,6 +12,7 @@ int column_number = 1;
 
 // Estrutura para uma entrada na tabela de símbolos
 typedef struct {
+    int id;
     char *lexeme;
     int line;
     int column;
@@ -31,6 +32,7 @@ void insert_symbol(char *lexeme, int line, int column) {
     }
     // Adiciona o novo símbolo se houver espaço
     if (symbolCount < MAX_SYMBOLS) {
+        symbolTable[symbolCount].id = symbolCount + 1;
         symbolTable[symbolCount].lexeme = strdup(lexeme); // Aloca memória e copia o lexema
         symbolTable[symbolCount].line = line;
         symbolTable[symbolCount].column = column;
@@ -41,10 +43,10 @@ void insert_symbol(char *lexeme, int line, int column) {
 // Função para exibir a tabela de símbolos formatada
 void display_symbol_table() {
     printf("\n\n--- Tabela de Símbolos ---\n");
-    printf("Lexema\t\tPosição (Linha, Coluna)\n");
+    printf("ID\tLexema\t\tPosição (Linha, Coluna)\n");
     printf("----------------------------------------\n");
     for (int i = 0; i < symbolCount; i++) {
-        printf("%-15s\t(%d, %d)\n", symbolTable[i].lexeme, symbolTable[i].line, symbolTable[i].column);
+        printf("%-3d\t%-15s\t(%d, %d)\n", symbolTable[i].id, symbolTable[i].lexeme, symbolTable[i].line, symbolTable[i].column);
     }
     printf("----------------------------------------\n");
 }
@@ -52,8 +54,10 @@ void display_symbol_table() {
 
 /*-------------------------- Definições de Expressões Regulares --------------------------*/
 letter          [A-Za-z]
-digit           [0-9]   
-number          [-]?{digit}+
+digit           [0-9]
+digitNZ         [1-9]   
+number          [-]?{digitNZ}{digit}*|[0]
+invalidNumber   [-0]{digit}*|[0][digit]+
 id              {letter}({letter}|{digit})*
 delim           [ \t\r]
 ws              {delim}+
@@ -75,7 +79,11 @@ other           .
 "true"            { fprintf(yyout, "<TRUE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "false"           { fprintf(yyout, "<FALSE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 
-{number}        { fprintf(yyout, "<NUMBER, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+{number}        { 
+                    fprintf(yyout, "<NUMBER, %s, %d, %d> ", yytext, yylineno, column_number); 
+                    column_number+=yyleng;
+                }
+
 {id}            { 
                     fprintf(yyout, "<ID, %s, %d, %d> ", yytext, yylineno, column_number); 
                     insert_symbol(yytext, yylineno, column_number);
@@ -109,6 +117,11 @@ other           .
 ")"             { fprintf(yyout, "<RPARENTESE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "{"             { fprintf(yyout, "<LCHAVES, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 "}"             { fprintf(yyout, "<RCHAVES, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+
+{invalidNumber} {
+                    fprintf(stderr, "Erro lexico na linha %d, coluna %d. Numero invalido: \%s\"\n", yylineno, column_number, yytext);
+                    column_number += yyleng;
+                }
 
 {other}         { fprintf(stderr,"Erro lexico na linha %d, coluna %d. Caractere desconhecido: \"%s\"\n", yylineno, column_number, yytext); column_number += yyleng; }
 
