@@ -1,0 +1,35 @@
+/*
+ * Arquivo de teste para o Analisador SINTATICO
+ * da linguagem "mini C".
+ */
+int global = 100;
+bool flag = true;
+
+int main() {
+    int a;
+    int b = -10; // Teste de menos unario
+
+    // Teste de precedencia de operadores
+    // (5 + 10) * (b / 2) = 15 * -5 = -75
+    a = (5 + 10) * (b / 2);
+
+    // Teste de "Dangling Else"
+    // O 'else' deve pertencer ao 'if(a < 0)'
+    if (flag)
+        if (a < 0)
+            print("a eh negativo!");
+        else
+            print("a nao eh negativo!"); // Este 'else'
+
+    // Teste de laco while e bloco
+    int count = 3;
+    while (count > 0) {
+        print(count);
+        count = count - 1;
+    }
+    
+    // Teste de erro sintatico (falta ;)
+    int erro = 50
+    
+    print("Fim do teste.");
+}
