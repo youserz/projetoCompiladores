@@ -33,12 +33,46 @@ O desenvolvimento do compilador é dividido em três etapas:
 - C/C++ para integração e execução
 
 ## 📜 Como compilar
-```bash
-flex scanner.l
-bison -d parser.y
-gcc lex.yy.c parser.tab.c -o compilador
-```
+As instruções de compilação mudam dependendo da etapa do projeto.
 
+### Etapa 1: Analisador Léxico (Standalone)
+
+Estas instruções se aplicam à versão da Etapa 1, onde o arquivo `main.l` (ou `scanner.l`) **deve conter sua própria função `main()`** e **não deve incluir `parser.h`**.
+
+```bash
+# 1. Gera o analisador C a partir do arquivo Flex (ex: main.l)
+flex main.l
+
+# 2. Compila o arquivo C gerado (lex.yy.c)
+# A flag -lfl é (geralmente) necessária para incluir
+# a biblioteca do Flex, caso você não defina sua própria yywrap().
+# Se você usou %option noyywrap, ela pode não ser necessária.
+gcc lex.yy.c -o analisador_lexico -lfl
+
+# 3. Executa o analisador passando um arquivo de teste
+./analisador_lexico < tests/seu_teste.txt
+```
+#### Etapa 2: Analisador Sintático (Flex + Bison)
+Estas são as instruções para compilar o projeto completo (Etapa 2), que integra o Flex e o Bison. O arquivo `main.l` depende do `parser.y`.
+```bash
+# 1. Executa o Bison para gerar o parser C e o header
+# -d -> Cria o arquivo de definições 'parser.tab.h'
+# 'parser.y' -> Gera 'parser.tab.c' (o parser) e 'parser.tab.h' (os tokens)
+bison -d -o -v parser.y
+
+# 2. Executa o Flex para gerar o scanner C
+# 'main.l' -> Gera 'lex.yy.c'
+# (Nota: main.l deve incluir "parser.tab.h" gerado acima)
+flex main.l
+
+# 3. Compila e linca os dois arquivos C gerados
+# A função main() está definida dentro de 'parser.y'
+# O resultado é um executável chamado 'compilador'
+gcc lex.yy.c parser.tab.c -o compilador
+
+# 4. Executa o compilador completo passando um arquivo de teste
+./compilador tests/seu_teste.txt
+```
 ## 👥 Autores
 Bernado Diniz, Luan Shimosaka, Luiz Philip
 
