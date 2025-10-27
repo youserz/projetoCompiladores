@@ -3,14 +3,13 @@
 /*-------------------------- Seção de Definições em C --------------------------*/
 %{
 #include <stdio.h>
-#include <string.h> // Necessário para strcmp e strdup
+#include <string.h>
+#include "parser.h"
 
 // Variável global para contar as colunas manualmente
 int column_number = 1;
+int token_start_column = 1;
 
-// --- Implementação da Tabela de Símbolos ---
-
-// Estrutura para uma entrada na tabela de símbolos
 typedef struct {
     int id;
     char *lexeme;
@@ -22,25 +21,21 @@ typedef struct {
 SymbolEntry symbolTable[MAX_SYMBOLS];
 int symbolCount = 0;
 
-// Função para adicionar um símbolo à tabela (evita duplicatas)
 void insert_symbol(char *lexeme, int line, int column) {
-    // Verifica se o símbolo já existe na tabela
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].lexeme, lexeme) == 0) {
-            return; // Símbolo já existe, não faz nada
+            return;
         }
     }
-    // Adiciona o novo símbolo se houver espaço
     if (symbolCount < MAX_SYMBOLS) {
         symbolTable[symbolCount].id = symbolCount + 1;
-        symbolTable[symbolCount].lexeme = strdup(lexeme); // Aloca memória e copia o lexema
+        symbolTable[symbolCount].lexeme = strdup(lexeme);
         symbolTable[symbolCount].line = line;
         symbolTable[symbolCount].column = column;
         symbolCount++;
     }
 }
 
-// Função para exibir a tabela de símbolos formatada
 void display_symbol_table() {
     printf("\n\n--- Tabela de Símbolos ---\n");
     printf("ID\tLexema\t\tPosição (Linha, Coluna)\n");
@@ -56,95 +51,70 @@ void display_symbol_table() {
 letter          [A-Za-z]
 digit           [0-9]
 digitNZ         [1-9]   
-number          [-]?{digitNZ}{digit}*|[0]
-invalidNumber   [-0]{digit}*|[0][digit]+
+number          [-]?{digitNZ}{digit}*|{digit}+
 id              {letter}({letter}|{digit})*
 delim           [ \t\r]
 ws              {delim}+
 Scomment        \/\/[^\n]*
 Mcomment        \/\*([^*]|\*+[^*/])*\*+\/
 
+string_literal  \"[^"\n]*\"
+
 other           .
 
-
-/*-------------------------- Regras Léxicas --------------------------*/
+/*-------------------------- Regras Léxicas (MODIFICADAS) --------------------------*/
 %%
-"int"             { fprintf(yyout, "<INT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"bool"            { fprintf(yyout, "<BOOL, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"if"              { fprintf(yyout, "<IF, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"else"            { fprintf(yyout, "<ELSE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"while"           { fprintf(yyout, "<WHILE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"print"           { fprintf(yyout, "<PRINT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"read"            { fprintf(yyout, "<READ, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"true"            { fprintf(yyout, "<TRUE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"false"           { fprintf(yyout, "<FALSE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
 
-{number}        { 
-                    fprintf(yyout, "<NUMBER, %s, %d, %d> ", yytext, yylineno, column_number); 
-                    column_number+=yyleng;
-                }
+"int"             { token_start_column = column_number; column_number+=yyleng; return T_INT; }
+"bool"            { token_start_column = column_number; column_number+=yyleng; return T_BOOL; }
+"if"              { token_start_column = column_number; column_number+=yyleng; return T_IF; }
+"else"            { token_start_column = column_number; column_number+=yyleng; return T_ELSE; }
+"while"           { token_start_column = column_number; column_number+=yyleng; return T_WHILE; }
+"print"           { token_start_column = column_number; column_number+=yyleng; return T_PRINT; }
+"read"            { token_start_column = column_number; column_number+=yyleng; return T_READ; }
+"true"            { token_start_column = column_number; column_number+=yyleng; return T_TRUE; }
+"false"           { token_start_column = column_number; column_number+=yyleng; return T_FALSE; }
 
-{id}            { 
-                    fprintf(yyout, "<ID, %s, %d, %d> ", yytext, yylineno, column_number); 
+{number}          { token_start_column = column_number; column_number+=yyleng; return T_NUMBER; }
+{id}              {
+                    token_start_column = column_number;
                     insert_symbol(yytext, yylineno, column_number);
                     column_number += yyleng;
-                }
+                    return T_ID;
+                  }
 
-{Scomment}      {}
-{Mcomment}      {}
+{string_literal}  { token_start_column = column_number; column_number += yyleng; return T_STRING; }
+
+{Scomment}      { token_start_column = column_number; column_number += yyleng; }
+{Mcomment}      { token_start_column = column_number; column_number += yyleng; }
 {ws}            { column_number += yyleng; }
-\n              { fprintf(yyout, "\n"); column_number = 1; }
+\n              { column_number = 1; }
 
-"+"             { fprintf(yyout, "<PLUS, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"-"             { fprintf(yyout, "<MINUS, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"*"             { fprintf(yyout, "<TIMES, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"/"             { fprintf(yyout, "<DIV, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+"+"               { token_start_column = column_number; column_number+=yyleng; return T_PLUS; }
+"-"               { token_start_column = column_number; column_number+=yyleng; return T_MINUS; }
+"*"               { token_start_column = column_number; column_number+=yyleng; return T_TIMES; }
+"/"               { token_start_column = column_number; column_number+=yyleng; return T_DIV; }
+"="               { token_start_column = column_number; column_number+=yyleng; return T_ASSIGN; }
+"=="              { token_start_column = column_number; column_number+=yyleng; return T_EQ; }
+"!="              { token_start_column = column_number; column_number+=yyleng; return T_NE; }
+"<"               { token_start_column = column_number; column_number+=yyleng; return T_LT; }
+"<="              { token_start_column = column_number; column_number+=yyleng; return T_LE; }
+">"               { token_start_column = column_number; column_number+=yyleng; return T_GT; }
+">="              { token_start_column = column_number; column_number+=yyleng; return T_GE; }
+"&&"              { token_start_column = column_number; column_number+=yyleng; return T_AND; }
+"||"              { token_start_column = column_number; column_number+=yyleng; return T_OR; }
+"!"               { token_start_column = column_number; column_number+=yyleng; return T_NOT; }
 
-"="             { fprintf(yyout, "<ASSIGN, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"=="            { fprintf(yyout, "<EQ, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"!="            { fprintf(yyout, "<NE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"<"             { fprintf(yyout, "<LT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"<="            { fprintf(yyout, "<LE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-">"             { fprintf(yyout, "<GT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-">="            { fprintf(yyout, "<GE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"&&"            { fprintf(yyout, "<AND, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"||"            { fprintf(yyout, "<OR, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"!"             { fprintf(yyout, "<NOT, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
+";"               { token_start_column = column_number; column_number+=yyleng; return T_SEMICOLON; }
+"("               { token_start_column = column_number; column_number+=yyleng; return T_LPARENTESE; }
+")"               { token_start_column = column_number; column_number+=yyleng; return T_RPARENTESE; }
+"{"               { token_start_column = column_number; column_number+=yyleng; return T_LCHAVES; }
+"}"               { token_start_column = column_number; column_number+=yyleng; return T_RCHAVES; }
 
-";"             { fprintf(yyout, "<SEMICOLON, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-","             { fprintf(yyout, "<COMMA, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"("             { fprintf(yyout, "<LPARENTESE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-")"             { fprintf(yyout, "<RPARENTESE, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"{"             { fprintf(yyout, "<LCHAVES, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-"}"             { fprintf(yyout, "<RCHAVES, %s, %d, %d> ", yytext, yylineno, column_number); column_number+=yyleng; }
-
-{invalidNumber} {
-                    fprintf(stderr, "Erro lexico na linha %d, coluna %d. Numero invalido: \%s\"\n", yylineno, column_number, yytext);
-                    column_number += yyleng;
-                }
-
-{other}         { fprintf(stderr,"Erro lexico na linha %d, coluna %d. Caractere desconhecido: \"%s\"\n", yylineno, column_number, yytext); column_number += yyleng; }
+{other}           { 
+                    token_start_column = column_number;
+                    fprintf(stderr,"Erro lexico na linha %d, coluna %d. Caractere desconhecido: \"%s\"\n", yylineno, column_number, yytext);
+                    column_number += yyleng; 
+                  }
 
 %%
-/*-------------------------- Seção de Código do Usuário --------------------------*/
-
-int main(int argc, char *argv[]){
-    if (argc < 2) {
-        fprintf(stderr, "Uso: %s <arquivo_de_entrada>\n", argv[0]);
-        return 1;
-    }
-
-    yyin = fopen(argv[1], "r");
-    if (!yyin) {
-        perror(argv[1]);
-        return 1;
-    }
-    
-    yyout = stdout; // A saída dos tokens será na tela (saída padrão)
-    yylex(); // Inicia a análise léxica
-
-    display_symbol_table(); // Exibe a tabela de símbolos ao final
-    
-    fclose(yyin);
-    return 0;
-}
