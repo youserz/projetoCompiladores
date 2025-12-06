@@ -1,0 +1,24 @@
+// Declarações globais são permitidas
+int a;
+int b;
+int d = 10;
+bool controle;
+
+// Código executável deve ir dentro de uma função
+int main() {
+    a = 10; 
+    b = 20;
+
+    if (!!!(a < b)) {
+        print(a);
+    } else {
+        print(b);
+    }
+    
+    if(!true == false || true && !false){
+        print(a + b);
+    }
+
+    int c = a + b;
+    int d = c + d * a;
+}
