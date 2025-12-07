@@ -1236,7 +1236,7 @@ yyreduce:
             if (t != (yyvsp[0].expr).type && (yyvsp[0].expr).type != TYPE_ERROR) {
                 fprintf(stderr, "Erro Semantico [%d]: Tipo incompativel.\n", yylineno);
             }
-            emit("%s = %s", (yyvsp[-2].lexeme), (yyvsp[0].expr).addr);
+            printf("%s = %s\n", (yyvsp[-2].lexeme), (yyvsp[0].expr).addr);
         }
       }
 #line 1243 "analisadorSintatico.tab.c"
@@ -1276,7 +1276,7 @@ yyreduce:
             if (entry->type != (yyvsp[-1].expr).type && (yyvsp[-1].expr).type != TYPE_ERROR) {
                 fprintf(stderr, "Erro Semantico [%d]: Atribuicao incompativel.\n", yylineno);
             }
-            emit("%s = %s", (yyvsp[-3].lexeme), (yyvsp[-1].expr).addr);
+            printf("%s = %s\n", (yyvsp[-3].lexeme), (yyvsp[-1].expr).addr);
         }
     }
 #line 1283 "analisadorSintatico.tab.c"
@@ -1286,7 +1286,7 @@ yyreduce:
 #line 140 "analisadorSintatico.y"
     {
         /* Final do IF: Imprime o label de saída (L_end) gerado pelo M_else_jump */
-        emit_label((yyvsp[-1].lexeme)); 
+        printf("%s\n",(yyvsp[-1].lexeme)); 
     }
 #line 1292 "analisadorSintatico.tab.c"
     break;
@@ -1297,7 +1297,7 @@ yyreduce:
         /* CORREÇÃO: Usar -1 para pular o RPARENTESE e pegar a expression */
         if ((yyvsp[(-1) - (0)].expr).type != TYPE_BOOL) fprintf(stderr, "Erro Semantico [%d]: IF requer bool.\n", yylineno);
         char *L_false = new_label();
-        emit("ifFalse %s goto %s", (yyvsp[(-1) - (0)].expr).addr, L_false);
+        printf("ifFalse %s goto %s\n", (yyvsp[(-1) - (0)].expr).addr, L_false);
         (yyval.lexeme) = L_false; 
     }
 #line 1304 "analisadorSintatico.tab.c"
@@ -1307,9 +1307,9 @@ yyreduce:
 #line 159 "analisadorSintatico.y"
     {
         char *L_end = new_label();
-        emit("goto %s", L_end);       // Pula o else se veio do if
+        printf("goto %s\n", L_end);       // Pula o else se veio do if
         /* Acessa M_if_false em $-1 (pois statement é $0) */
-        emit_label((yyvsp[(-1) - (0)].lexeme));      // Cola o label L_false aqui
+        printf("%s\n", (yyvsp[(-1) - (0)].lexeme));      // Cola o label L_false aqui
         (yyval.lexeme) = L_end;                   // Retorna L_end para ser usado no final
     }
 #line 1316 "analisadorSintatico.tab.c"
@@ -1318,8 +1318,8 @@ yyreduce:
   case 30: /* while_statement: T_WHILE T_LPARENTESE M_while_start expression T_RPARENTESE M_while_cond statement  */
 #line 177 "analisadorSintatico.y"
     {
-        emit("goto %s", (yyvsp[-4].lexeme)); // Pula para M_while_start
-        emit_label((yyvsp[-1].lexeme));      // Cola M_while_cond (saída)
+        printf("goto %s\n", (yyvsp[-4].lexeme)); // Pula para M_while_start
+        printf("%s\n",(yyvsp[-1].lexeme));      // Cola M_while_cond (saída)
     }
 #line 1325 "analisadorSintatico.tab.c"
     break;
@@ -1328,7 +1328,7 @@ yyreduce:
 #line 184 "analisadorSintatico.y"
     {
         char *L_start = new_label();
-        emit_label(L_start);
+        printf("%s\n", L_start);
         (yyval.lexeme) = L_start;
     }
 #line 1335 "analisadorSintatico.tab.c"
@@ -1340,7 +1340,7 @@ yyreduce:
         /* CORREÇÃO: Usar -1 para pular o RPARENTESE e pegar a expression */
         if ((yyvsp[(-1) - (0)].expr).type != TYPE_BOOL) fprintf(stderr, "Erro Semantico [%d]: WHILE requer bool.\n", yylineno); 
         char *L_end = new_label();
-        emit("ifFalse %s goto %s", (yyvsp[(-1) - (0)].expr).addr, L_end);
+        printf("ifFalse %s goto %s\n", (yyvsp[(-1) - (0)].expr).addr, L_end);
         (yyval.lexeme) = L_end;
     }
 #line 1347 "analisadorSintatico.tab.c"
@@ -1348,13 +1348,13 @@ yyreduce:
 
   case 33: /* io_statement: T_PRINT T_LPARENTESE expression T_RPARENTESE T_SEMICOLON  */
 #line 202 "analisadorSintatico.y"
-                                                               { emit("print %s", (yyvsp[-2].expr).addr); }
+                                                               { printf("print %s\n", (yyvsp[-2].expr).addr); }
 #line 1353 "analisadorSintatico.tab.c"
     break;
 
   case 34: /* io_statement: T_READ T_LPARENTESE T_ID T_RPARENTESE T_SEMICOLON  */
 #line 203 "analisadorSintatico.y"
-                                                        { emit("read %s", (yyvsp[-2].lexeme)); }
+                                                        { printf("read %s\n", (yyvsp[-2].lexeme)); }
 #line 1359 "analisadorSintatico.tab.c"
     break;
 
@@ -1401,7 +1401,7 @@ yyreduce:
 #line 222 "analisadorSintatico.y"
                                    {
         (yyval.expr).type = check_arithmetic((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s + %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s + %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1407 "analisadorSintatico.tab.c"
     break;
@@ -1410,7 +1410,7 @@ yyreduce:
 #line 226 "analisadorSintatico.y"
                                     {
         (yyval.expr).type = check_arithmetic((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s - %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s - %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1416 "analisadorSintatico.tab.c"
     break;
@@ -1419,7 +1419,7 @@ yyreduce:
 #line 230 "analisadorSintatico.y"
                                     {
         (yyval.expr).type = check_arithmetic((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s * %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s * %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1425 "analisadorSintatico.tab.c"
     break;
@@ -1428,7 +1428,7 @@ yyreduce:
 #line 234 "analisadorSintatico.y"
                                   {
         (yyval.expr).type = check_arithmetic((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s / %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s / %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1434 "analisadorSintatico.tab.c"
     break;
@@ -1437,7 +1437,7 @@ yyreduce:
 #line 238 "analisadorSintatico.y"
                                  {
         (yyval.expr).type = check_relational((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s < %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s < %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1443 "analisadorSintatico.tab.c"
     break;
@@ -1446,7 +1446,7 @@ yyreduce:
 #line 242 "analisadorSintatico.y"
                                  {
         (yyval.expr).type = check_relational((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s > %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s > %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1452 "analisadorSintatico.tab.c"
     break;
@@ -1455,7 +1455,7 @@ yyreduce:
 #line 246 "analisadorSintatico.y"
                                  {
         (yyval.expr).type = check_relational((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s <= %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s <= %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1461 "analisadorSintatico.tab.c"
     break;
@@ -1464,7 +1464,7 @@ yyreduce:
 #line 250 "analisadorSintatico.y"
                                  {
         (yyval.expr).type = check_relational((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s >= %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s >= %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1470 "analisadorSintatico.tab.c"
     break;
@@ -1472,7 +1472,7 @@ yyreduce:
   case 48: /* expression: expression T_EQ expression  */
 #line 254 "analisadorSintatico.y"
                                  {
-         char *t = new_temp(); emit("%s = %s == %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+         char *t = new_temp(); printf("%s = %s == %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
          if ((yyvsp[-2].expr).type == (yyvsp[0].expr).type) (yyval.expr).type = TYPE_BOOL; else (yyval.expr).type = TYPE_ERROR;
     }
 #line 1479 "analisadorSintatico.tab.c"
@@ -1481,7 +1481,7 @@ yyreduce:
   case 49: /* expression: expression T_NE expression  */
 #line 258 "analisadorSintatico.y"
                                  {
-         char *t = new_temp(); emit("%s = %s != %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+         char *t = new_temp(); printf("%s = %s != %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
          if ((yyvsp[-2].expr).type == (yyvsp[0].expr).type) (yyval.expr).type = TYPE_BOOL; else (yyval.expr).type = TYPE_ERROR;
     }
 #line 1488 "analisadorSintatico.tab.c"
@@ -1491,7 +1491,7 @@ yyreduce:
 #line 262 "analisadorSintatico.y"
                                   {
         (yyval.expr).type = check_logical((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s && %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s && %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1497 "analisadorSintatico.tab.c"
     break;
@@ -1500,7 +1500,7 @@ yyreduce:
 #line 266 "analisadorSintatico.y"
                                  {
         (yyval.expr).type = check_logical((yyvsp[-2].expr).type, (yyvsp[0].expr).type);
-        char *t = new_temp(); emit("%s = %s || %s", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = %s || %s\n", t, (yyvsp[-2].expr).addr, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1506 "analisadorSintatico.tab.c"
     break;
@@ -1509,7 +1509,7 @@ yyreduce:
 #line 270 "analisadorSintatico.y"
                        {
         (yyval.expr).type = check_logical((yyvsp[0].expr).type, TYPE_BOOL);
-        char *t = new_temp(); emit("%s = !%s", t, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
+        char *t = new_temp(); printf("%s = !%s\n", t, (yyvsp[0].expr).addr); strcpy((yyval.expr).addr, t);
     }
 #line 1515 "analisadorSintatico.tab.c"
     break;

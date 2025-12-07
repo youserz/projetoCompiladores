@@ -6,7 +6,7 @@
 #include <string.h>
 
 // Definição dos Tipos de Dados da Linguagem
-typedef enum { TYPE_INT, TYPE_BOOL, TYPE_VOID, TYPE_ERROR } DataType;
+typedef enum { TYPE_INT, TYPE_BOOL, TYPE_STRING, TYPE_ERROR } DataType;
 
 // Estrutura usada dentro do Bison para passar tipo e endereço
 typedef struct {
@@ -23,7 +23,6 @@ typedef struct SymbolEntry {
 } SymbolEntry;
 
 // Funções de Tabela de Símbolos
-void init_symbol_table();
 void enter_scope();
 void exit_scope();
 int insert_symbol(char *lexeme, DataType type);
@@ -32,8 +31,6 @@ SymbolEntry* lookup_symbol(char *lexeme);
 // Funções de Geração de Código
 char* new_temp();
 char* new_label();
-void emit(const char *fmt, ...);
-void emit_label(char *label);
 
 // Verificações de Tipos
 DataType check_arithmetic(DataType t1, DataType t2);

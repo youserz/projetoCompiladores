@@ -55,7 +55,7 @@ extern FILE *yyin;
 %%
 
 program_start:
-    { init_symbol_table(); } declaration_list
+    declaration_list
     ;
 
 declaration_list:
@@ -88,7 +88,7 @@ single_var_decl:
             if (t != $3.type && $3.type != TYPE_ERROR) {
                 fprintf(stderr, "Erro Semantico [%d]: Tipo incompativel.\n", yylineno);
             }
-            emit("%s = %s", $1, $3.addr);
+            printf("%s = %s\n", $1, $3.addr);
         }
       }
     ;
@@ -128,7 +128,7 @@ assignment_statement:
             if (entry->type != $3.type && $3.type != TYPE_ERROR) {
                 fprintf(stderr, "Erro Semantico [%d]: Atribuicao incompativel.\n", yylineno);
             }
-            emit("%s = %s", $1, $3.addr);
+            printf("%s = %s\n", $1, $3.addr);
         }
     }
     ;
@@ -139,7 +139,7 @@ if_statement:
     T_IF T_LPARENTESE expression T_RPARENTESE M_if_false statement M_else_jump else_part
     {
         /* Final do IF: Imprime o label de saída (L_end) gerado pelo M_else_jump */
-        emit_label($7); 
+        printf("%s\n",$7); 
     }
     ;
 
@@ -149,7 +149,7 @@ M_if_false:
         /* CORREÇÃO: Usar -1 para pular o RPARENTESE e pegar a expression */
         if ($<expr>-1.type != TYPE_BOOL) fprintf(stderr, "Erro Semantico [%d]: IF requer bool.\n", yylineno);
         char *L_false = new_label();
-        emit("ifFalse %s goto %s", $<expr>-1.addr, L_false);
+        printf("ifFalse %s goto %s\n", $<expr>-1.addr, L_false);
         $$ = L_false; 
     }
     ;
@@ -158,9 +158,9 @@ M_if_false:
 M_else_jump:
     {
         char *L_end = new_label();
-        emit("goto %s", L_end);       // Pula o else se veio do if
+        printf("goto %s\n", L_end);       // Pula o else se veio do if
         /* Acessa M_if_false em $-1 (pois statement é $0) */
-        emit_label($<lexeme>-1);      // Cola o label L_false aqui
+        printf("%s\n", $<lexeme>-1);      // Cola o label L_false aqui
         $$ = L_end;                   // Retorna L_end para ser usado no final
     }
     ;
@@ -175,15 +175,15 @@ else_part:
 while_statement:
     T_WHILE T_LPARENTESE M_while_start expression T_RPARENTESE M_while_cond statement
     {
-        emit("goto %s", $3); // Pula para M_while_start
-        emit_label($6);      // Cola M_while_cond (saída)
+        printf("goto %s\n", $3); // Pula para M_while_start
+        printf("%s\n",$6);      // Cola M_while_cond (saída)
     }
     ;
 
 M_while_start:
     {
         char *L_start = new_label();
-        emit_label(L_start);
+        printf("%s\n", L_start);
         $$ = L_start;
     }
     ;
@@ -193,14 +193,14 @@ M_while_cond:
         /* CORREÇÃO: Usar -1 para pular o RPARENTESE e pegar a expression */
         if ($<expr>-1.type != TYPE_BOOL) fprintf(stderr, "Erro Semantico [%d]: WHILE requer bool.\n", yylineno); 
         char *L_end = new_label();
-        emit("ifFalse %s goto %s", $<expr>-1.addr, L_end);
+        printf("ifFalse %s goto %s\n", $<expr>-1.addr, L_end);
         $$ = L_end;
     }
     ;
 
 io_statement:
-      T_PRINT T_LPARENTESE expression T_RPARENTESE T_SEMICOLON { emit("print %s", $3.addr); }
-    | T_READ T_LPARENTESE T_ID T_RPARENTESE T_SEMICOLON { emit("read %s", $3); }
+      T_PRINT T_LPARENTESE expression T_RPARENTESE T_SEMICOLON { printf("print %s\n", $3.addr); }
+    | T_READ T_LPARENTESE T_ID T_RPARENTESE T_SEMICOLON { printf("read %s\n", $3); }
     ;
 
 expression:
@@ -217,59 +217,59 @@ expression:
     | T_NUMBER { $$.type = TYPE_INT; strcpy($$.addr, $1); }
     | T_TRUE   { $$.type = TYPE_BOOL; strcpy($$.addr, "true"); }
     | T_FALSE  { $$.type = TYPE_BOOL; strcpy($$.addr, "false"); }
-    | T_STRING { $$.type = TYPE_VOID; strcpy($$.addr, $1); }
+    | T_STRING { $$.type = TYPE_STRING; strcpy($$.addr, $1); }
     
     | expression T_PLUS expression {
         $$.type = check_arithmetic($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s + %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s + %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_MINUS expression {
         $$.type = check_arithmetic($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s - %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s - %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_TIMES expression {
         $$.type = check_arithmetic($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s * %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s * %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_DIV expression {
         $$.type = check_arithmetic($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s / %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s / %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_LT expression {
         $$.type = check_relational($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s < %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s < %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_GT expression {
         $$.type = check_relational($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s > %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s > %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_LE expression {
         $$.type = check_relational($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s <= %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s <= %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_GE expression {
         $$.type = check_relational($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s >= %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s >= %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_EQ expression {
-         char *t = new_temp(); emit("%s = %s == %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+         char *t = new_temp(); printf("%s = %s == %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
          if ($1.type == $3.type) $$.type = TYPE_BOOL; else $$.type = TYPE_ERROR;
     }
     | expression T_NE expression {
-         char *t = new_temp(); emit("%s = %s != %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+         char *t = new_temp(); printf("%s = %s != %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
          if ($1.type == $3.type) $$.type = TYPE_BOOL; else $$.type = TYPE_ERROR;
     }
     | expression T_AND expression {
         $$.type = check_logical($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s && %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s && %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | expression T_OR expression {
         $$.type = check_logical($1.type, $3.type);
-        char *t = new_temp(); emit("%s = %s || %s", t, $1.addr, $3.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = %s || %s\n", t, $1.addr, $3.addr); strcpy($$.addr, t);
     }
     | T_NOT expression {
         $$.type = check_logical($2.type, TYPE_BOOL);
-        char *t = new_temp(); emit("%s = !%s", t, $2.addr); strcpy($$.addr, t);
+        char *t = new_temp(); printf("%s = !%s\n", t, $2.addr); strcpy($$.addr, t);
     }
     | T_LPARENTESE expression T_RPARENTESE { $$ = $2; }
     ;
