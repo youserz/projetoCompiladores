@@ -32,47 +32,38 @@ O desenvolvimento do compilador é dividido em três etapas:
 - [Bison](https://www.gnu.org/software/bison/) (Analisador Sintático)
 - C/C++ para integração e execução
 
-## 📜 Como compilar
-As instruções de compilação mudam dependendo da etapa do projeto.
+## 📜 Como Compilar e Executar
 
-### Etapa 1: Analisador Léxico (Standalone)
+Siga os passos abaixo para gerar o executável final do compilador.
 
-Estas instruções se aplicam à versão da Etapa 1, onde o arquivo `main.l` (ou `scanner.l`) **deve conter sua própria função `main()`** e **não deve incluir `parser.h`**.
+### 1. Gerar o Analisador Sintático
+O Bison processa a gramática e gera o parser em C (`analisadorSintatico.tab.c`) e o cabeçalho de tokens (`analisadorSintatico.tab.h`).
 
 ```bash
-# 1. Gera o analisador C a partir do arquivo Flex (ex: main.l)
-flex main.l
-
-# 2. Compila o arquivo C gerado (lex.yy.c)
-# A flag -lfl é (geralmente) necessária para incluir
-# a biblioteca do Flex, caso você não defina sua própria yywrap().
-# Se você usou %option noyywrap, ela pode não ser necessária.
-gcc lex.yy.c -o analisador_lexico -lfl
-
-# 3. Executa o analisador passando um arquivo de teste
-./analisador_lexico < tests/seu_teste.txt
+bison -d analisadorSintatico.y
 ```
-#### Etapa 2: Analisador Sintático (Flex + Bison)
-Estas são as instruções para compilar o projeto completo (Etapa 2), que integra o Flex e o Bison. O arquivo `main.l` depende do `parser.y`.
+### 2. Gerar o Analisador Léxico
+O Flex processa as regras léxicas e gera o scanner em C (`lex.yy.c`).
 ```bash
-# 1. Executa o Bison para gerar o parser C e o header
-# -d -> Cria o arquivo de definições 'parser.tab.h'
-# 'parser.y' -> Gera 'parser.tab.c' (o parser) e 'parser.tab.h' (os tokens)
-bison -d -o -v parser.y
-
-# 2. Executa o Flex para gerar o scanner C
-# 'main.l' -> Gera 'lex.yy.c'
-# (Nota: main.l deve incluir "parser.tab.h" gerado acima)
-flex main.l
-
-# 3. Compila e linca os dois arquivos C gerados
-# A função main() está definida dentro de 'parser.y'
-# O resultado é um executável chamado 'compilador'
-gcc lex.yy.c parser.tab.c -o compilador
-
-# 4. Executa o compilador completo passando um arquivo de teste
-./compilador tests/seu_teste.txt
+flex analisadorLexico.l
 ```
+
+### 3. Compilar e Linkar
+O GCC compila o parser, o scanner e o módulo semântico juntos para criar o executável final (`compilador`).
+```bash
+gcc -o compilador analisadorSintatico.tab.c lex.yy.c analisadorSemantico.c
+```
+(Nota: Não é necessário a flag ``-lfl`` pois o léxico utiliza ``%option noyywrap``)
+
+### 4. Executar o Teste
+Para rodar o compilador, passe um arquivo de código fonte como argumento.
+
+```bash
+./compilador teste.bll
+```
+Se houver erros (léxicos, sintáticos ou semânticos), eles serão reportados na saída de erro (``stderr``) indicando a linha: ``Erro Semantico [15]: Variavel 'y' nao declarada``.
 ## 👥 Autores
-Bernado Diniz, Luan Shimosaka, Luiz Philip
 
+| [<img src="https://github.com/youserz.png" width="100">](https://github.com/youserz) | [<img src="https://github.com/LuizPhillipResende.png" width="100">](https://github.com/LuizPhillipResende) | [<img src="https://github.com/luanShimosaka.png" width="100">](https://github.com/luanShimosaka) |
+|---|---|---|
+| [Bernardo Diniz](https://github.com/youserz) | [Luiz Phillip Resende](https://github.com/LuizPhillipResende) | [Luan Shimosaka](https://github.com/luanShimosaka) | [Marco Franco](https://github.com/MarcoTFranco) |
