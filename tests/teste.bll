@@ -1,0 +1,33 @@
+int a;
+int b;
+bool flag;
+
+int main() {
+    // 1. Teste de Entrada e Atribuicao
+    read(a); 
+    
+    // 2. Teste de Aritmetica Complexa + Unario (-)
+    // Verifica precedencia (* antes de +) e o operador unario
+    b = -a + 5 * 2; 
+
+    // 3. Teste de Relacional e Logico
+    // Verifica se (b > 0) E se nao e falso (true)
+    flag = (b > 0) && !false;
+
+    // 4. Teste de Fluxo (If/Else) e Escopo Aninhado
+    if (flag) {
+        // Variavel 'temp' so existe dentro deste bloco (Escopo)
+        int temp;
+        temp = b;
+        print(temp);
+    } else {
+        print(0);
+    }
+
+    // 5. Teste de Laco (While)
+    while (a < 10) {
+        a = a + 1;
+    }
+    
+    print(a);
+}
